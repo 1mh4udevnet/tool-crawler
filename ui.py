@@ -8,6 +8,7 @@ import shutil
 
 from app.crawler import run_crawler
 from app.config import STATE_FILE, DATA_FILE
+from app.config import DOWNLOAD_DIR
 
 
 # =========================
@@ -159,7 +160,7 @@ class ToolUI:
         popup.title("Dọn dẹp ảnh")
         popup.geometry("520x440")
 
-        folder = "picturedownload"
+        folder = DOWNLOAD_DIR
         images = sorted(os.listdir(folder)) if os.path.exists(folder) else []
 
         var_delete_all = tk.BooleanVar()
