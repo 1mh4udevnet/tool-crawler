@@ -9,6 +9,7 @@ from app.config import (
     PAGE_WAIT,
     PAGE_LOAD_TIMEOUT,
     NEXT_BUTTON_SELECTOR,
+    DATA_FILE,          # ✅ thêm
 )
 
 from app.downloader import download_all
@@ -19,9 +20,6 @@ from app.exporter import export_to_json
 # LẤY ẢNH + TITLE (h3.title) + STT
 # =========================
 def extract_images(page, start_index=1):
-    """
-    Mỗi card = 1 ảnh + 1 tiêu đề (h3.title) + STT
-    """
     results = []
     stt = start_index
 
@@ -78,7 +76,10 @@ def crawl_pages(start_page: int, end_page: int):
     global_stt = 1
 
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=HEADLESS)
+        browser = p.chromium.launch(
+            headless=HEADLESS,
+            channel="chrome"     # ✅ thêm 1 dòng (rất quan trọng cho exe)
+        )
         page = browser.new_page()
 
         print(f"Mo trang: {TARGET_URL}")
@@ -115,16 +116,14 @@ def crawl_pages(start_page: int, end_page: int):
 # LOGIC CHÍNH
 # =========================
 def run_crawler(start_page: int, end_page: int):
-    # 1️⃣ Crawl metadata
     items = crawl_pages(start_page, end_page)
     print(f"\nTong cong crawl duoc: {len(items)} anh")
 
-    # 2️⃣ Tải ảnh + chống trùng bằng HASH
     downloaded_data = asyncio.run(download_all(items))
 
     if downloaded_data:
-        # 3️⃣ Xuất JSON cho auto đăng bài
-        export_to_json(downloaded_data, filename="data.json")
+        # ✅ dùng path tuyệt đối từ config
+        export_to_json(downloaded_data, filename=DATA_FILE)
     else:
         print("Khong co anh moi (tat ca da ton tai)")
 

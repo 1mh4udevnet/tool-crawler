@@ -1,6 +1,12 @@
 import os
+import sys
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if getattr(sys, "frozen", False):
+    # chạy từ file .exe (dist/)
+    BASE_DIR = os.path.dirname(sys.executable)
+else:
+    # chạy python ui.py
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 DATA_DIR = os.path.join(BASE_DIR, "data")
 STATE_FILE = os.path.join(DATA_DIR, "state.json")

@@ -152,7 +152,7 @@ class ToolUI:
         self.log.config(state="disabled")
 
     # =========================
-    # CLEANUP POPUP (XÓA ẢNH – KHÔNG RECYCLE)
+    # CLEANUP POPUP (XÓA ẢNH)
     # =========================
     def open_cleanup_popup(self):
         popup = tk.Toplevel(self.root)
@@ -163,13 +163,7 @@ class ToolUI:
         images = sorted(os.listdir(folder)) if os.path.exists(folder) else []
 
         var_delete_all = tk.BooleanVar()
-
-        tk.Checkbutton(
-            popup,
-            text="Xóa TOÀN BỘ ảnh trong picturedownload",
-            variable=var_delete_all
-        ).pack(anchor="w", padx=10, pady=5)
-
+        
         tk.Label(popup, text="Hoặc chọn ảnh để xóa:").pack(anchor="w", padx=10)
 
         listbox = tk.Listbox(

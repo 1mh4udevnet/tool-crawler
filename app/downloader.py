@@ -27,14 +27,13 @@ def compute_hash(content: bytes) -> str:
 async def download_one(session, item):
     os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
-    async with session.get(item["url"], timeout=DOWNLOAD_TIMEOUT) as resp:
+    async with session.get(item["url"]) as resp:
         if resp.status != 200:
             return None
 
         content = await resp.read()
         image_hash = compute_hash(content)
 
-        # 👉 ĐÃ TỒN TẠI → KHÔNG TẢI
         if has_hash(image_hash):
             return None
 
@@ -56,8 +55,13 @@ async def download_one(session, item):
 async def download_all(items):
     results = []
 
+    timeout = aiohttp.ClientTimeout(total=DOWNLOAD_TIMEOUT)   # ✅ thêm
     connector = aiohttp.TCPConnector(limit=MAX_CONCURRENT_DOWNLOAD)
-    async with aiohttp.ClientSession(connector=connector) as session:
+
+    async with aiohttp.ClientSession(
+        connector=connector,
+        timeout=timeout
+    ) as session:
         tasks = [download_one(session, item) for item in items]
         completed = await asyncio.gather(*tasks)
 
