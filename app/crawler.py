@@ -1,6 +1,8 @@
 import argparse
 import time
 import asyncio
+import os
+
 from playwright.sync_api import sync_playwright, TimeoutError
 
 from app.config import (
@@ -9,7 +11,6 @@ from app.config import (
     PAGE_WAIT,
     PAGE_LOAD_TIMEOUT,
     NEXT_BUTTON_SELECTOR,
-    DATA_FILE,          # ✅ thêm
 )
 
 from app.downloader import download_all
@@ -17,7 +18,26 @@ from app.exporter import export_to_json
 
 
 # =========================
-# LẤY ẢNH + TITLE (h3.title) + STT
+# PLAYWRIGHT FIX (BẮT BUỘC)
+# =========================
+# Ép Playwright KHÔNG dùng browser nội bộ
+os.environ["PLAYWRIGHT_BROWSERS_PATH"] = "0"
+
+
+def get_chrome_path():
+    """Tự động tìm Chrome trên Windows"""
+    paths = [
+        r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+        r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+    ]
+    for path in paths:
+        if os.path.exists(path):
+            return path
+    raise FileNotFoundError("❌ Không tìm thấy Google Chrome trên máy")
+
+
+# =========================
+# CRAWL LOGIC
 # =========================
 def extract_images(page, start_index=1):
     results = []
@@ -42,15 +62,11 @@ def extract_images(page, start_index=1):
             "title": title,
             "url": src
         })
-
         stt += 1
 
     return results
 
 
-# =========================
-# CLICK TRANG TIẾP THEO
-# =========================
 def click_next(page) -> bool:
     try:
         icon = page.locator(NEXT_BUTTON_SELECTOR).first
@@ -62,43 +78,65 @@ def click_next(page) -> bool:
         btn.click()
         return True
 
-    except TimeoutError:
-        return False
     except Exception:
         return False
 
 
-# =========================
-# CRAWL THEO TRANG
-# =========================
-def crawl_pages(start_page: int, end_page: int):
+def crawl_pages(start_page, end_page, stop_flag=None):
     all_items = []
     global_stt = 1
 
+    chrome_path = get_chrome_path()
+
     with sync_playwright() as p:
         browser = p.chromium.launch(
+            executable_path=chrome_path,
             headless=HEADLESS,
-            channel="chrome"     # ✅ thêm 1 dòng (rất quan trọng cho exe)
+            args=[
+                "--disable-blink-features=AutomationControlled",
+                "--disable-infobars",
+                "--no-sandbox",
+            ],
         )
+
         page = browser.new_page()
 
-        print(f"Mo trang: {TARGET_URL}")
+        print(f"Mở trang: {TARGET_URL}")
         page.goto(TARGET_URL, timeout=PAGE_LOAD_TIMEOUT)
         page.wait_for_load_state("networkidle")
 
+        # 🔥 NHẢY TỚI START_PAGE
         current_page = 1
+        while current_page < start_page:
+            if stop_flag and stop_flag():
+                print("[STOP] Đã dừng khi nhảy trang")
+                browser.close()
+                return []
 
-        while True:
-            print(f"\n=== Dang crawl TRANG {current_page} ===")
+            print(f"Đang bỏ qua TRANG {current_page}")
+            if not click_next(page):
+                print("Không thể nhảy tới trang bắt đầu")
+                browser.close()
+                return []
+
+            time.sleep(PAGE_WAIT)
+            current_page += 1
+
+        # 🔥 BẮT ĐẦU CRAWL
+        while current_page <= end_page:
+            if stop_flag and stop_flag():
+                print("[STOP] Đã dừng crawl")
+                break
+
+            print(f"\n=== Đang crawl TRANG {current_page} ===")
 
             items = extract_images(page, start_index=global_stt)
-            print(f"Tim thay {len(items)} anh")
+            print(f"Tìm thấy {len(items)} ảnh")
 
-            if start_page <= current_page <= end_page:
-                all_items.extend(items)
-                global_stt += len(items)
+            all_items.extend(items)
+            global_stt += len(items)
 
-            if current_page >= end_page:
+            if current_page == end_page:
                 break
 
             if not click_next(page):
@@ -112,20 +150,19 @@ def crawl_pages(start_page: int, end_page: int):
     return all_items
 
 
-# =========================
-# LOGIC CHÍNH
-# =========================
-def run_crawler(start_page: int, end_page: int):
-    items = crawl_pages(start_page, end_page)
-    print(f"\nTong cong crawl duoc: {len(items)} anh")
+def run_crawler(start_page, end_page, stop_flag=None):
+    items = crawl_pages(start_page, end_page, stop_flag)
+
+    if stop_flag and stop_flag():
+        print("[STOP] Dừng trước khi tải ảnh")
+        return
 
     downloaded_data = asyncio.run(download_all(items))
 
     if downloaded_data:
-        # ✅ dùng path tuyệt đối từ config
-        export_to_json(downloaded_data, filename=DATA_FILE)
+        export_to_json(downloaded_data)
     else:
-        print("Khong co anh moi (tat ca da ton tai)")
+        print("Không có ảnh mới (tất cả đã tồn tại)")
 
 
 # =========================
@@ -133,7 +170,7 @@ def run_crawler(start_page: int, end_page: int):
 # =========================
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Crawler buavl.net (STT + title + hash)"
+        description="Crawler buavl.net (STT + title + image)"
     )
 
     parser.add_argument("--start", type=int, required=True)
@@ -142,7 +179,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.start < 1 or args.start > args.end:
-        print("Trang khong hop le")
+        print("Trang không hợp lệ")
         exit(1)
 
     run_crawler(args.start, args.end)

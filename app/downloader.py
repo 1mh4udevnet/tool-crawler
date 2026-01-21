@@ -5,8 +5,9 @@ import asyncio
 import hashlib
 from urllib.parse import urlparse
 
-from app.config import DOWNLOAD_DIR, MAX_CONCURRENT_DOWNLOAD, DOWNLOAD_TIMEOUT
-from app.state import has_hash, add_hash
+from app.config import PICTURE_DIR, MAX_CONCURRENT_DOWNLOAD, DOWNLOAD_TIMEOUT
+
+from app.state import has_hash, add_hash_and_inc_stt
 
 
 def safe_filename(text, max_len=100):
@@ -25,9 +26,9 @@ def compute_hash(content: bytes) -> str:
 
 
 async def download_one(session, item):
-    os.makedirs(DOWNLOAD_DIR, exist_ok=True)
+    os.makedirs(PICTURE_DIR, exist_ok=True)
 
-    async with session.get(item["url"]) as resp:
+    async with session.get(item["url"], timeout=DOWNLOAD_TIMEOUT) as resp:
         if resp.status != 200:
             return None
 
@@ -37,20 +38,24 @@ async def download_one(session, item):
         if has_hash(image_hash):
             return None
 
-        filename = filename_from_item(item)
-        path = os.path.join(DOWNLOAD_DIR, filename)
+        # 🔥 LẤY STT TOÀN CỤC
+        stt = add_hash_and_inc_stt(image_hash)
+
+        title = safe_filename(item["title"])
+        ext = os.path.splitext(urlparse(item["url"]).path)[1] or ".jpg"
+        filename = f"{stt:03d}_{title}{ext}"
+
+        path = os.path.join(PICTURE_DIR, filename)
 
         with open(path, "wb") as f:
             f.write(content)
 
-        add_hash(image_hash)
-
         return {
-            "stt": item["stt"],
+            "stt": stt,
             "title": item["title"],
-            "local_image_path": path
+            "local_image_path": path,
+            "hash": image_hash,
         }
-
 
 async def download_all(items):
     results = []

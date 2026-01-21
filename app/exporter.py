@@ -1,19 +1,29 @@
 import json
 import os
-from app.config import DATA_FILE, DATA_DIR
+from app.config import DATA_FILE, INFO_DIR
 
 
-def export_to_json(items, filename=None):
-    os.makedirs(DATA_DIR, exist_ok=True)
+def export_to_json(items):
+    os.makedirs(INFO_DIR, exist_ok=True)
 
-    if filename is None:
-        path = DATA_FILE
+    # load cũ
+    if os.path.exists(DATA_FILE):
+        try:
+            with open(DATA_FILE, "r", encoding="utf-8") as f:
+                old_items = json.load(f)
+                if not isinstance(old_items, list):
+                    old_items = []
+        except Exception:
+            old_items = []
     else:
-        # ✅ nếu filename là path tuyệt đối → dùng luôn
-        if os.path.isabs(filename):
-            path = filename
-        else:
-            path = os.path.join(DATA_DIR, filename)
+        old_items = []
 
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(items, f, ensure_ascii=False, indent=2)
+    # append + sort
+    old_items.extend(items)
+    old_items.sort(key=lambda x: x.get("stt", 0))
+
+    # ghi lại
+    with open(DATA_FILE, "w", encoding="utf-8") as f:
+        json.dump(old_items, f, ensure_ascii=False, indent=2)
+
+    print(f"[OK] Đã ghi {len(items)} item ")
