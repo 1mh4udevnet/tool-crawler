@@ -1,6 +1,8 @@
 # Python
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 
 # Virtual environment
 venv/
@@ -9,9 +11,19 @@ venv/
 # Playwright
 .playwright/
 
-# VS Code
-.vscode/
+# Build and Distribution
+dist/
+build/
+*.spec
+*.exe
+
+# Data and Results
+data/
+pictures/
 
 # OS
 .DS_Store
 Thumbs.db
+
+# VS Code
+.vscode/
