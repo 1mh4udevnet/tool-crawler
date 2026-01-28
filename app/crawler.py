@@ -146,14 +146,14 @@ def click_next_or_scroll(page) -> bool:
         selectors = [
             "text='Trang tiếp'", "text='Trang sau'", "text='Next'", 
             "text='Xem thêm'", "text='Load more'", "text='More'",
-            "span.next-icon", "i.fa-chevron-right", "button.load-more"
+            "span.next-icon", "button.load-more", "i.fas.fa-chevron-right", "i.fa-chevron-right"
         ]
         
         for sel in selectors:
             btn = page.query_selector(sel)
             if btn and btn.is_visible() and btn.is_enabled():
                 btn.click()
-                print(f"[Smart] Đã nhấn nút: {sel}")
+                print(f"[Smart] Chuyển trang tiếp theo")
                 return True
 
         # 2. Nếu không có nút, thử cuộn xuống (Progressive Scroll)

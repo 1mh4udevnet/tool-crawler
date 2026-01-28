@@ -93,8 +93,8 @@ class ToolUI:
         root.title("ToolCraw")
         
         # Window dimensions
-        window_width = 1000
-        window_height = 850
+        window_width = 800
+        window_height = 700
         
         # Get screen dimensions
         screen_width = root.winfo_screenwidth()
@@ -136,8 +136,8 @@ class ToolUI:
         main_container = tk.Frame(self.root, bg="#F7FAFC")
         main_container.pack(fill=tk.BOTH, expand=True)
 
-        # ===== HEADER (Pink) - INCREASED HEIGHT FOR LARGER TITLE =====
-        header = tk.Frame(main_container, bg="#F687B3", height=150)
+        # ===== HEADER (Pink) - COMPACT =====
+        header = tk.Frame(main_container, bg="#F687B3", height=100)
         header.pack(fill=tk.X)
         header.pack_propagate(False)
 
@@ -166,29 +166,19 @@ class ToolUI:
             text="ToolCraw",
             fg="white",
             bg="#F687B3",
-            font=("Segoe UI Emoji", 36, "bold")
+            font=("Segoe UI Emoji", 28, "bold")
         ).pack()
 
         # ===== CONTENT OVERLAY =====
-        content_frame = tk.Frame(main_container, bg="#F7FAFC", padx=25, pady=20)
+        content_frame = tk.Frame(main_container, bg="#F7FAFC", padx=15, pady=10)
         content_frame.pack(fill=tk.BOTH, expand=True)
 
         # --- SECTION: INPUT (Card Design) ---
         input_card = tk.Frame(content_frame, bg="white", relief=tk.FLAT, bd=0, highlightthickness=1, highlightbackground="#EDF2F7")
         input_card.pack(fill=tk.X, pady=(0, 15))
         
-        input_inner = tk.Frame(input_card, bg="white", padx=20, pady=20)
+        input_inner = tk.Frame(input_card, bg="white", padx=15, pady=10)
         input_inner.pack(fill=tk.X)
-
-        # URL Row
-        url_row = tk.Frame(input_inner, bg="white")
-        url_row.pack(fill=tk.X, pady=(0, 15))
-        
-        tk.Label(url_row, text="\U0001F517 URL:", bg="white", font=("Segoe UI Emoji", 10, "bold"), fg="#4A5568").pack(side=tk.LEFT, padx=(0, 10))
-        self.url_entry = tk.Entry(url_row, font=("Segoe UI", 11), relief=tk.FLAT, highlightthickness=1, highlightbackground="#CBD5E0")
-        self.url_entry.pack(side=tk.LEFT, fill=tk.X, expand=True)
-        self.url_entry.insert(0, "") # Bỏ mặc định
-        self.url_entry.bind('<Return>', lambda e: self.start_task())
 
         # Bottom Row (Start, End, Buttons)
         bottom_row = tk.Frame(input_inner, bg="white")
@@ -203,14 +193,12 @@ class ToolUI:
         self.start_entry = tk.Entry(pages_box, width=6, font=("Segoe UI", 11), justify='center', relief=tk.FLAT, highlightthickness=1, highlightbackground="#CBD5E0")
         self.start_entry.pack(side=tk.LEFT)
         self.start_entry.insert(0, "1")
-        self.start_entry.bind('<Return>', lambda e: self.start_task())
 
         tk.Label(pages_box, text="→", bg="white", fg="#A0AEC0").pack(side=tk.LEFT, padx=5)
         
         self.end_entry = tk.Entry(pages_box, width=6, font=("Segoe UI", 11), justify='center', relief=tk.FLAT, highlightthickness=1, highlightbackground="#CBD5E0")
         self.end_entry.pack(side=tk.LEFT)
         self.end_entry.insert(0, "1")
-        self.end_entry.bind('<Return>', lambda e: self.start_task())
 
         # Action Buttons
         self.run_btn = self.create_styled_button(bottom_row, "\u25B6 Chạy ngay", "#48BB78", self.start_task, width=15)
@@ -224,7 +212,7 @@ class ToolUI:
         control_card = tk.Frame(content_frame, bg="white", relief=tk.FLAT, bd=0, highlightthickness=1, highlightbackground="#EDF2F7")
         control_card.pack(fill=tk.X, pady=(0, 15))
         
-        control_inner = tk.Frame(control_card, bg="white", padx=15, pady=15)
+        control_inner = tk.Frame(control_card, bg="white", padx=10, pady=10)
         control_inner.pack(anchor=tk.CENTER)
 
         # Grid of controls
@@ -235,16 +223,15 @@ class ToolUI:
         self.clear_btn.grid(row=0, column=1, padx=8, pady=5)
  
         self.reset_btn = self.create_styled_button(control_inner, "\U0001F504 Reset lịch sử", "#9F7AEA", self.reset_history)
-        self.reset_btn.grid(row=1, column=0, padx=8, pady=5)
+        self.reset_btn.grid(row=0, column=2, padx=8, pady=5)
  
-        self.refresh_btn = self.create_styled_button(control_inner, "\u26A1 Làm mới ảnh", "#ED8936", self.reload_cleanup_images)
-        self.refresh_btn.grid(row=1, column=1, padx=8, pady=5)
+        self.refresh_btn = None # Removed as requested
 
         # --- SECTION: PROGRESS (Card Design) ---
         progress_card = tk.Frame(content_frame, bg="white", relief=tk.FLAT, bd=0, highlightthickness=1, highlightbackground="#EDF2F7")
         progress_card.pack(fill=tk.X, pady=(0, 15))
         
-        progress_inner = tk.Frame(progress_card, bg="white", padx=20, pady=15)
+        progress_inner = tk.Frame(progress_card, bg="white", padx=15, pady=10)
         progress_inner.pack(fill=tk.X)
 
         self.status_label = tk.Label(
@@ -307,7 +294,7 @@ class ToolUI:
         )
         self.log.pack(fill=tk.BOTH, expand=True)
         self.log.config(state="disabled")
-        self.paned_window.add(self.log_container, width=500)
+        self.paned_window.add(self.log_container, width=430)
 
         # --- RIGHT PART: CLEANUP ---
         self.cleanup_container = tk.Frame(self.paned_window, bg="white")
@@ -335,13 +322,13 @@ class ToolUI:
         )
         self.cleanup_count_label.pack(side=tk.LEFT)
 
-        self.cleanup_delete_btn = self.create_styled_button(cleanup_top_bar, "Xóa", "#F56565", self.do_cleanup, width=5)
+        self.cleanup_delete_btn = self.create_styled_button(cleanup_top_bar, "Xóa", "#F56565", self.do_cleanup)
         self.cleanup_delete_btn.pack(side=tk.RIGHT)
 
-        self.cleanup_deselect_btn = self.create_styled_button(cleanup_top_bar, "\u232B Bỏ chọn", "#718096", self.deselect_all_cleanup, width=8)
+        self.cleanup_deselect_btn = self.create_styled_button(cleanup_top_bar, "Bỏ chọn", "#718096", self.deselect_all_cleanup)
         self.cleanup_deselect_btn.pack(side=tk.RIGHT, padx=5)
 
-        self.cleanup_select_all_btn = self.create_styled_button(cleanup_top_bar, "\u2713 Tất cả", "#4299E1", self.select_all_cleanup, width=8)
+        self.cleanup_select_all_btn = self.create_styled_button(cleanup_top_bar, "Tất cả", "#4299E1", self.select_all_cleanup)
         self.cleanup_select_all_btn.pack(side=tk.RIGHT)
 
         # --- Middle part: List + Scrollbar wrapped in a frame ---
@@ -373,10 +360,14 @@ class ToolUI:
         self.cleanup_listbox.bind("<Button-1>", self.on_cleanup_click)
         self.cleanup_listbox.config(state="disabled")
 
-        self.paned_window.add(self.cleanup_container, width=380)
+        self.paned_window.add(self.cleanup_container, width=340)
 
         sys.stdout = TextRedirector(self.log)
         sys.stderr = TextRedirector(self.log)
+        
+        # Global binds
+        self.root.bind('<Return>', lambda e: self.toggle_task())
+        self.root.bind('<Escape>', lambda e: self.exit_app())
         
         # Initial load
         self.reload_cleanup_images()
@@ -394,8 +385,8 @@ class ToolUI:
             fg="white",
             font=("Segoe UI", 9, "bold"),
             relief=tk.FLAT,
-            padx=20,
-            pady=8,
+            padx=15,
+            pady=6,
             cursor="hand2",
             activebackground=color, # Keep base color, we handle hover via event
             state=state,
@@ -440,7 +431,6 @@ class ToolUI:
         self.running = running
         state = "disabled" if running else "normal"
 
-        self.url_entry.config(state=state)
         self.start_entry.config(state=state)
         self.end_entry.config(state=state)
         self.run_btn.config(state="disabled" if running else "normal")
@@ -448,7 +438,7 @@ class ToolUI:
         self.exit_btn.config(state="disabled" if running else "normal")
         self.clear_btn.config(state="disabled" if running else "normal")
         self.reset_btn.config(state="disabled" if running else "normal")
-        self.refresh_btn.config(state="disabled" if running else "normal")
+        if self.refresh_btn: self.refresh_btn.config(state="disabled" if running else "normal")
         self.cleanup_delete_btn.config(state="disabled" if running else "normal")
         self.cleanup_deselect_btn.config(state="disabled" if running else "normal")
         self.cleanup_select_all_btn.config(state="disabled" if running else "normal")
@@ -472,6 +462,15 @@ class ToolUI:
         self.status_label.config(text="Sẵn sàng")
 
     # =========================
+    # TOGGLE
+    # =========================
+    def toggle_task(self):
+        if self.running:
+            self.stop_task()
+        else:
+            self.start_task()
+
+    # =========================
     # RUN
     # =========================
     def start_task(self):
@@ -479,14 +478,9 @@ class ToolUI:
             messagebox.showinfo("Đang chạy", "Tool đang chạy, vui lòng chờ hoặc bấm Dừng.")
             return
 
-        # Validate URL
-        url = self.url_entry.get().strip()
-        if not url:
-            messagebox.showerror("Lỗi", "URL không được để trống")
-            return
-        if not (url.startswith("http://") or url.startswith("https://")):
-            messagebox.showerror("Lỗi", "URL phải bắt đầu với http:// hoặc https://")
-            return
+        # Use TARGET_URL from config
+        from app.config import TARGET_URL
+        url = TARGET_URL
 
         try:
             start = int(self.start_entry.get())
